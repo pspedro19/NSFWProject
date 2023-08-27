@@ -53,26 +53,25 @@ async def process_videos(folder_info: dict):
         if not folder_url:
             raise HTTPException(status_code=400, detail="Folder URL is missing in the request")
 
-        # Extract the folder ID from the URL
-        folder_id = folder_url.split("/")[5].split("?")[0]
+        # List files in the Google Drive folder
+        files = gdd.list_files(folder_url=folder_url)
 
-        # List image filenames in the Google Drive folder
-        image_filenames = gdd.list_file_ids(folder_id=folder_id)
-
-        # Process the images and return results
+        # Process the files and return results
         results = []
-        for image_filename in image_filenames:
-            # Download image data from Google Drive
-            image_path = os.path.join('images', image_filename)
-            gdd.download_file_from_google_drive(file_id=image_filename, dest_path=image_path)
+        for file_info in files:
+            file_id = file_info["id"]
+            file_name = file_info["name"]
+            # Download file data from Google Drive
+            file_path = os.path.join('files', file_name)
+            gdd.download_file_from_google_drive(file_id=file_id, dest_path=file_path)
 
-            # Process image and get its analysis results
-            with open(image_path, "rb") as image_file:
-                image_data = image_file.read()
-            image_stream = BytesIO(image_data)
-            image = Image.open(image_stream)
-            prompt = image_to_prompt(image, mode="best")  # Modify the mode as needed
-            analysis_result = {"image": image_filename, "prompt": prompt}
+            # Process file and get its analysis results
+            with open(file_path, "rb") as file:
+                file_data = file.read()
+            file_stream = BytesIO(file_data)
+            file_data = Image.open(file_stream)
+            prompt = image_to_prompt(file_data, mode="best")  # Modify the mode as needed
+            analysis_result = {"file": file_name, "prompt": prompt}
             results.append(analysis_result)
 
         return JSONResponse(content={"results": results})
