@@ -1,5 +1,5 @@
 # Import necessary libraries
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from PIL import Image
 from io import BytesIO
@@ -46,29 +46,33 @@ def image_to_prompt(image, mode):
 
 # Define a route to process videos
 @app.post("/api/process_videos/")
-async def process_videos():
+async def process_videos(folder_info: dict):
     try:
-        # Replace with the Google Drive folder URL
-        folder_url = "https://drive.google.com/drive/folders/1N6KpWfYhOt_s2I6jGEIKiERLMY2J8Sqa?usp=sharing"
+        # Extract the folder URL from the request
+        folder_url = folder_info.get("folder_url")
+        if not folder_url:
+            raise HTTPException(status_code=400, detail="Folder URL is missing in the request")
 
         # Extract the folder ID from the URL
         folder_id = folder_url.split("/")[5].split("?")[0]
 
-        # List video filenames in the local "videos" directory
-        videos_folder = 'videos'
-        video_filenames = os.listdir(videos_folder)
+        # List image filenames in the Google Drive folder
+        image_filenames = gdd.list_file_ids(folder_id=folder_id)
 
-        # Process the videos and return results
+        # Process the images and return results
         results = []
-        for video_filename in video_filenames:
-            # Process video and get its analysis results
-            video_path = os.path.join(videos_folder, video_filename)
-            with open(video_path, "rb") as video_file:
-                video_data = video_file.read()
-            video_stream = BytesIO(video_data)
-            video_image = Image.open(video_stream)
-            prompt = image_to_prompt(video_image, mode="best")  # Modify the mode as needed
-            analysis_result = {"video": video_filename, "prompt": prompt}
+        for image_filename in image_filenames:
+            # Download image data from Google Drive
+            image_path = os.path.join('images', image_filename)
+            gdd.download_file_from_google_drive(file_id=image_filename, dest_path=image_path)
+
+            # Process image and get its analysis results
+            with open(image_path, "rb") as image_file:
+                image_data = image_file.read()
+            image_stream = BytesIO(image_data)
+            image = Image.open(image_stream)
+            prompt = image_to_prompt(image, mode="best")  # Modify the mode as needed
+            analysis_result = {"image": image_filename, "prompt": prompt}
             results.append(analysis_result)
 
         return JSONResponse(content={"results": results})
