@@ -5,7 +5,7 @@ from PIL import Image
 from io import BytesIO
 import os
 import subprocess
-from google_drive_downloader import GoogleDriveDownloader as gdd
+import requests
 from clip_interrogator import Config, Interrogator
 
 # Initialize the FastAPI app
@@ -53,26 +53,26 @@ async def process_videos(folder_info: dict):
         if not folder_url:
             raise HTTPException(status_code=400, detail="Folder URL is missing in the request")
 
-        # List files in the Google Drive folder
-        files = gdd.list_files(folder_url=folder_url)
+        # Get folder ID from the URL
+        folder_id = folder_url.split("/")[-1].split("?")[0]
+
+        # Get the list of file URLs in the folder
+        file_list_url = f"https://www.googleapis.com/drive/v3/files?q='{folder_id}' in parents&key=YOUR_GOOGLE_DRIVE_API_KEY"
+        response = requests.get(file_list_url)
+        file_list = response.json().get("files", [])
 
         # Process the files and return results
         results = []
-        for file_info in files:
-            file_id = file_info["id"]
-            file_name = file_info["name"]
-            # Download file data from Google Drive
-            file_path = os.path.join('files', file_name)
-            gdd.download_file_from_google_drive(file_id=file_id, dest_path=file_path)
-
-            # Process file and get its analysis results
-            with open(file_path, "rb") as file:
-                file_data = file.read()
-            file_stream = BytesIO(file_data)
-            file_data = Image.open(file_stream)
-            prompt = image_to_prompt(file_data, mode="best")  # Modify the mode as needed
-            analysis_result = {"file": file_name, "prompt": prompt}
-            results.append(analysis_result)
+        for file in file_list:
+            file_name = file.get("name")
+            file_url = file.get("webContentLink")
+            if file_name and file_url:
+                file_data = requests.get(file_url).content
+                file_stream = BytesIO(file_data)
+                file_image = Image.open(file_stream)
+                prompt = image_to_prompt(file_image, mode="best")  # Modify the mode as needed
+                analysis_result = {"file": file_name, "prompt": prompt}
+                results.append(analysis_result)
 
         return JSONResponse(content={"results": results})
     except Exception as e:
