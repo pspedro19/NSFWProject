@@ -7,28 +7,22 @@ import os
 import subprocess
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from clip_interrogator import Config, Interrogator
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 # Initialize the FastAPI app
 app = FastAPI()
 
-# Define a function to set up the required dependencies
-def setup():
-    install_cmds = [
-        ['pip', 'install', 'gradio'],
-        ['pip', 'install', 'open_clip_torch'],
-        ['pip', 'install', 'clip-interrogator'],
-    ]
-    for cmd in install_cmds:
-        print(subprocess.run(cmd, stdout=subprocess.PIPE).stdout.decode('utf-8'))
-
-# Call the setup function to install the required dependencies
-setup()
-
-# Initialize the Clip Interrogator configuration
+# Initialize the Clip Interrogator configuration and Interrogator
 config = Config()
 config.clip_model_name = 'ViT-L-14/openai'
 config.caption_model_name = 'blip-large'
 ci = Interrogator(config)
+
+# Define a function to process images and generate prompts
+def image_to_prompt(image, mode):
+    prompt = ci.get_prompt_from_image(image, mode=mode)
+    return prompt
 
 # Define a function to process videos and generate prompts
 def video_to_prompt(video_path, mode):
@@ -52,9 +46,16 @@ async def process_videos(folder_info: dict):
         # Extract the folder ID from the URL
         folder_id = folder_url.split("/")[5].split("?")[0]
 
-        # List video filenames in the Google Drive folder
-        file_list = gdd.list_drive_files(folder_id=folder_id)
-        video_filenames = [file.get("name") for file in file_list if file.get("mimeType") == "video/mp4"]
+        # Initialize Google Drive API
+        api_service_name = "drive"
+        api_version = "v3"
+        creds = None  # Use your credentials here
+        service = build(api_service_name, api_version, credentials=creds)
+
+        # List video filenames in the Google Drive folder using Google Drive API
+        query = f"'{folder_id}' in parents and mimeType='video/mp4'"
+        response = service.files().list(q=query, fields="files(name)").execute()
+        video_filenames = [file.get("name") for file in response.get("files", [])]
 
         # Process the videos and return results
         results = []
@@ -76,4 +77,3 @@ async def process_videos(folder_info: dict):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=4000)
-

@@ -1,7 +1,8 @@
-fastapi==0.68.0
-Pillow==8.4.0
-tqdm==4.62.3
-gradio==2.3.2
-open-clip-torch==0.0.6
-clip-interrogator==1.0.3
-fastapi google_drive_downloader
+fastapi
+Pillow
+tqdm
+gradio
+open-clip-torch
+clip-interrogator
+googledrivedownloader
+google-api-python-client
