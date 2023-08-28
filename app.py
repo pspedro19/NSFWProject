@@ -4,7 +4,6 @@ from fastapi.responses import JSONResponse
 from PIL import Image
 from io import BytesIO
 import os
-import subprocess
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from clip_interrogator import Config, Interrogator
 from googleapiclient.discovery import build
@@ -60,14 +59,17 @@ async def process_videos(folder_info: dict):
         # Process the videos and return results
         results = []
         for video_filename in video_filenames:
-            # Download video data from Google Drive
-            video_path = os.path.join('videos', video_filename)
-            gdd.download_file_from_google_drive(file_id=video_filename, dest_path=video_path)
-
-            # Process video and get its analysis results
-            prompt = video_to_prompt(video_path, mode="best")  # Modify the mode as needed
-            analysis_result = {"video": video_filename, "prompt": prompt}
-            results.append(analysis_result)
+            try:
+                # Download video data from Google Drive
+                video_path = os.path.join('videos', video_filename)
+                gdd.download_file_from_google_drive(file_id=video_filename, dest_path=video_path)
+    
+                # Process video and get its analysis results
+                prompt = video_to_prompt(video_path, mode="best")  # Modify the mode as needed
+                analysis_result = {"video": video_filename, "prompt": prompt}
+                results.append(analysis_result)
+            except Exception as e:
+                results.append({"video": video_filename, "error": str(e)})
 
         return JSONResponse(content={"results": results})
     except Exception as e:
