@@ -33,6 +33,12 @@ def video_to_prompt(video_path, mode):
     prompt = image_to_prompt(video_image, mode=mode)  # Modify the mode as needed
     return prompt
 
+# Initialize Google Drive API
+api_service_name = "drive"
+api_version = "v3"
+creds = None  # Use your credentials here
+service = build(api_service_name, api_version, credentials=creds)
+
 # Define a route to process videos
 @app.post("/api/process_videos/")
 async def process_videos(folder_info: dict):
@@ -45,12 +51,6 @@ async def process_videos(folder_info: dict):
         # Extract the folder ID from the URL
         folder_id = folder_url.split("/")[5].split("?")[0]
 
-        # Initialize Google Drive API
-        api_service_name = "drive"
-        api_version = "v3"
-        creds = None  # Use your credentials here
-        service = build(api_service_name, api_version, credentials=creds)
-
         # List video filenames in the Google Drive folder using Google Drive API
         query = f"'{folder_id}' in parents and mimeType='video/mp4'"
         response = service.files().list(q=query, fields="files(name)").execute()
@@ -62,7 +62,8 @@ async def process_videos(folder_info: dict):
             try:
                 # Download video data from Google Drive
                 video_path = os.path.join('videos', video_filename)
-                gdd.download_file_from_google_drive(file_id=video_filename, dest_path=video_path)
+                download_url = f"https://drive.google.com/uc?id={video_filename}"
+                os.system(f"wget {download_url} -O {video_path}")
     
                 # Process video and get its analysis results
                 prompt = video_to_prompt(video_path, mode="best")  # Modify the mode as needed
