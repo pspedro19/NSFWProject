@@ -60,7 +60,7 @@ async def upload_videos(
         texts[file.filename]= text_list
     texto = texts[file.filename][0]
     prompt = "Give me a coherence video description for a sex porn video use explicit words the name of the porn model and context to make up the video descriptions, souds dirty and use all vocabulary related for NFSW for sex and porn escenes"
-    prompt = prompt + "############  use this context to create the description, use only the most important words and make up the porn video description: " +  texto + " ################## Pornstarname:"+ pornstars + "###################### Include in the description the following key words:" + keywords 
+    prompt = prompt + "############  use this context to create the description, use only the most important words and make up the porn video description: " +  texto + " ################## Pornstarname:"+ pornstars + "###################### Include in the description the following key words:" + keywords + "always include a title and description using colon simbols after the tilte and after the description like this title: description after the title make up the title and after the description make up the description"
     HOST = 'localhost:5000'
     URI = f'http://{HOST}/api/v1/chat'
     history = {'internal': [], 'visible': []}
