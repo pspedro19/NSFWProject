@@ -1,5 +1,6 @@
 moviepy
 fastapi
+nltk
 Pillow
 tqdm
 gradio
