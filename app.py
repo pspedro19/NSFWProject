@@ -170,7 +170,7 @@ async def upload_videos(
     last_title = remove_unwanted_words(last_title)
     last_desc = remove_unwanted_words(last_desc)
 
-    prompt2="Traduce esto a portugues con excelente vocabulario y coherencia:  #######" + "title:" + last_title + "description: " + last_desc 
+    prompt2="Translate this to portugues :  #######" + "title:" + last_title + "description: " + last_desc +"always include a title and description using colon simbols after the tilte and after the description like this title: description after the title make up the title and after the description make up the description" 
 
     request2 = {
         'user_input': prompt2,
