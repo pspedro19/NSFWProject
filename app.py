@@ -27,7 +27,7 @@ ci = Interrogator(config)
 
 app = FastAPI()
 
-async def extract_screenshots(video_path: Path, num_screenshots: int = 2):
+async def extract_screenshots(video_path: Path, num_screenshots: int = 7):
     clip = VideoFileClip(str(video_path))
     duration = clip.duration
     text_list = []
@@ -170,80 +170,7 @@ async def upload_videos(
     last_title = remove_unwanted_words(last_title)
     last_desc = remove_unwanted_words(last_desc)
 
-    prompt2="Translate this to portugues :  #######" + "title:" + last_title + "description: " + last_desc +"always include a title and description using colon simbols after the tilte and after the description like this title: description after the title make up the title and after the description make up the description" 
-
-    request2 = {
-        'user_input': prompt2,
-        'max_new_tokens': 250,
-        'auto_max_new_tokens': False,
-        'max_tokens_second': 0,
-        'history': history,
-        'mode': 'instruct',  # Valid options: 'chat', 'chat-instruct', 'instruct'
-        'character': 'Example',
-        'instruction_template': 'Vicuna-v1.1',  # Will get autodetected if unset
-        'your_name': 'You',
-
-        # Generation params. If 'preset' is set to different than 'None', the values
-        # in presets/preset-name.yaml are used instead of the individual numbers.
-        'preset': 'None',
-        'do_sample': True,
-        'temperature': 0.7,
-        'top_p': 0.1,
-        'typical_p': 1,
-        'epsilon_cutoff': 0,  # In units of 1e-4
-        'eta_cutoff': 0,  # In units of 1e-4
-        'tfs': 1,
-        'top_a': 0,
-        'repetition_penalty': 1.18,
-        'repetition_penalty_range': 0,
-        'top_k': 40,
-        'min_length': 0,
-        'no_repeat_ngram_size': 0,
-        'num_beams': 1,
-        'penalty_alpha': 0,
-        'length_penalty': 1,
-        'early_stopping': False,
-        'mirostat_mode': 0,
-        'mirostat_tau': 5,
-        'mirostat_eta': 0.1,
-        'guidance_scale': 1,
-        'negative_prompt': '',
-
-        'seed': -1,
-        'add_bos_token': True,
-        'truncation_length': 2048,
-        'ban_eos_token': False,
-        'skip_special_tokens': True,
-        'stopping_strings': []
-    }
-
-
-
-    response2 = requests.post(URI, json=request2)
-
-    result2 = response2.json()['results'][0]['history']
-    otro2 = print(json.dumps(result2, indent=4))
-    otro2 = str(otro2)
-    print(json.dumps(result2, indent=4))
-    print(prompt2)
-    print(str(result2))
-    result2 = str(result2)
-
-    # Your 'result' string
-    #result = "{'internal': [['Este anexo muestra una cronología de los eventos más relevantes de la historia de las personas LGTB en la república de Islandia. La historia de las personas lesbianas, gais, bisexuales y transgénero (LGBT) en Islandia se diferencia de la de otros países escandinavos por la baja visibilidad que tuvieron hasta mediados del siglo xx. Esto se debió a que la población de Islandia era mucho menor a la de sus análogos nórdicos y que durante gran parte de su historia fue principalmente una sociedad agraria.', 'visible': [['Este anexo muestra una cronología de los eventos más relevantes de la historia de las personas LGTB en la república de Islandia. La historia de las personas lesbianas, gais, bisexuales y transgénero (LGBT) en Islandia se diferencia de la de otros países escandinavos por la baja visibilidad que tuvieron hasta mediados del siglo xx. Esto se debió a que la población de Islandia era mucho menor a la de sus análogos nórdicos y que durante gran parte de su historia fue principalmente una sociedad agraria.;', 'Title: Barroco\\nDescription: El Barroco fue un período de la historia en la cultura occidental originado por una nueva forma de concebir el arte (el «estilo barroco») y que, partiendo desde diferentes contextos histórico-culturales, produjo obras en numerosos campos artísticos: literatura, arquitectura, escultura, pintura, música, ópera, danza, teatro, etc. Se manifestó principalmente en la Europa occidental, aunque debido al colonialismo también se dio en numerosas colonias de las potencias europeas, principalmente en Iberoamérica. Cronológicamente, abarcó todo el siglo xvii y principios del xviii, con mayor o menor prolongación en el tiempo dependiendo de cada país. Se suele situar entre el Manierismo y el Rococó, en una época caracterizada por fuertes disputas religiosas entre países católicos y protestantes, así como marcadas diferencias políticas entre los Estados absolutistas y los parlamentarios, donde una incipiente burguesía empezaba a poner los cimientos del capitalismo.']]}"
-
-    # Extract the last title and description using string splitting and rfind
-    last_title_idx2 = result2.rfind('Title:')
-    last_desc_idx2 = result2.rfind('Description:')
-
-    # Extract and clean up the last title and description
-    last_title2 = result2[last_title_idx2 + 6:last_desc_idx2].strip("\\n").strip()
-    last_desc2 = result2[last_desc_idx2 + 12:].strip("\\n").strip()
-
-    # Remove any trailing or leading spaces, and fix the escaped newline characters
-    last_title2 = last_title2.strip().replace('\\n', '\n')
-    last_desc2 = last_desc2.strip().replace('\\n', '\n')
-    return { "título": last_title2, "descrição": last_desc2, "Title": last_title, "Description": last_desc}
+    return {  "Title": last_title, "Description": last_desc}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=4000)
