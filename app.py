@@ -10,6 +10,15 @@ from PIL import Image
 from clip_interrogator import Config, Interrogator
 import os
 import requests
+import re
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+import nltk
+
+# Download nltk resources
+nltk.download('punkt')
+nltk.download('stopwords')
+
 # Configurar el modelo de IA
 config = Config()
 config.clip_model_name = 'ViT-L-14/openai'
@@ -18,7 +27,7 @@ ci = Interrogator(config)
 
 app = FastAPI()
 
-async def extract_screenshots(video_path: Path, num_screenshots: int = 1):
+async def extract_screenshots(video_path: Path, num_screenshots: int = 2):
     clip = VideoFileClip(str(video_path))
     duration = clip.duration
     text_list = []
@@ -59,8 +68,8 @@ async def upload_videos(
         text_list = await extract_screenshots(path)
         texts[file.filename]= text_list
     texto = texts[file.filename][0]
-    prompt = "Give me a coherence video description for a sex porn video use explicit words the name of the porn model and context to make up the video descriptions, souds dirty and use all vocabulary related for NFSW for sex and porn escenes The title and description must not contain the whole sentences in uppercase, The title and description must not contain any symmbol @_#$%^&*()<>/\|}{][~:;, The title and description must not contain studio name as well as the words 'episode','scene','chapter', The title and description MUST ONLY contain pronouns and verbs in the third person singular, The title and description must not contain an ellipsis, exclamation point, or question mark"
-    prompt = prompt + "############  use this context to create the description, use only the most important words and make up the porn video description: " +  texto + " ################## Pornstarname:"+ pornstars + "###################### Include in the description the following key words:" + keywords + "always include a title and description using colon simbols after the tilte and after the description like this title: description after the title make up the title and after the description make up the description"
+    prompt = "Give me a coherence video description for a sex porn video use explicit words the name of the porn model and context to make up the video descriptions, sounds dirty and use all vocabulary related for NFSW for sex and porn escenes The title and description must not contain the whole sentences in uppercase, The title and description must not contain any symmbol @_#$%^&*()<>/\|}{][~:;, The title and description must not contain studio name as well as the words 'episode','scene','chapter', The title and description MUST ONLY contain pronouns and verbs in the third person singular, The title and description must not contain an ellipsis, exclamation point, or question mark"
+    prompt = prompt + "############  use the following context to create the description, use only the most important words and make up the porn video description: " +  texto + " ################## Pornstarname:"+ pornstars + "###################### Include in the description the following key words:" + keywords + "always include a title and description using colon simbols after the tilte and after the description like this title: description after the title make up the title and after the description make up the description"
     HOST = 'localhost:5000'
     URI = f'http://{HOST}/api/v1/chat'
     history = {'internal': [], 'visible': []}
@@ -137,9 +146,36 @@ async def upload_videos(
     last_title = last_title.strip().replace('\\n', '\n')
     last_desc = last_desc.strip().replace('\\n', '\n')
 
-    # Display the extracted last title and description
-    print("Last Title:", last_title)
-    print("Last Description:", last_desc)
+    # Function to remove unwanted characters
+    def clean_text(text):
+        text = re.sub(r'[@_#$%^&*()<>/\\|}{\][~:;]', '', text)
+        text = re.sub(r'[!?.]', '', text)
+        return text
+
+    # Function to remove unwanted words
+    def remove_unwanted_words(text):
+        text = re.sub(r'\bstudio\b|\bepisode\b|\bscene\b|\bchapter\b', '', text, flags=re.I)
+        return text
+
+    # Function to keep only 3rd person singular verbs and pronouns
+    def keep_third_person_words(text):
+        third_person_words = {'he', 'she', 'it', 'his', 'her', 'its', 'him', 'hers', 'itself', 'runs', 'jumps', 'plays'} # Add more as needed
+        words = word_tokenize(text)
+        filtered_words = [word for word in words if word.lower() in third_person_words]
+        return ' '.join(filtered_words)
+
+    # Clean title and description
+    last_title = clean_text(last_title)
+    last_desc = clean_text(last_desc)
+
+    # Remove unwanted words
+    last_title = remove_unwanted_words(last_title)
+    last_desc = remove_unwanted_words(last_desc)
+
+    # Keep only 3rd person singular verbs and pronouns
+    last_title = keep_third_person_words(last_title)
+    last_desc = keep_third_person_words(last_desc)
+
     return { "Title": last_title, "Description": last_desc}
 
 if __name__ == "__main__":
