@@ -157,12 +157,6 @@ async def upload_videos(
         text = re.sub(r'\bstudio\b|\bepisode\b|\bscene\b|\bchapter\b', '', text, flags=re.I)
         return text
 
-    # Function to keep only 3rd person singular verbs and pronouns
-    def keep_third_person_words(text):
-        third_person_words = {'he', 'she', 'it', 'his', 'her', 'its', 'him', 'hers', 'itself', 'runs', 'jumps', 'plays'} # Add more as needed
-        words = word_tokenize(text)
-        filtered_words = [word for word in words if word.lower() in third_person_words]
-        return ' '.join(filtered_words)
 
     # Clean title and description
     last_title = clean_text(last_title)
@@ -171,10 +165,6 @@ async def upload_videos(
     # Remove unwanted words
     last_title = remove_unwanted_words(last_title)
     last_desc = remove_unwanted_words(last_desc)
-
-    # Keep only 3rd person singular verbs and pronouns
-    last_title = keep_third_person_words(last_title)
-    last_desc = keep_third_person_words(last_desc)
 
     return { "Title": last_title, "Description": last_desc}
 
