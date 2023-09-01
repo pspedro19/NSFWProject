@@ -121,7 +121,26 @@ async def upload_videos(
     print(prompt)
     print(str(result))
     result = str(result)
-    return { "Description": result}
+
+    # Your 'result' string
+    #result = "{'internal': [['Este anexo muestra una cronología de los eventos más relevantes de la historia de las personas LGTB en la república de Islandia. La historia de las personas lesbianas, gais, bisexuales y transgénero (LGBT) en Islandia se diferencia de la de otros países escandinavos por la baja visibilidad que tuvieron hasta mediados del siglo xx. Esto se debió a que la población de Islandia era mucho menor a la de sus análogos nórdicos y que durante gran parte de su historia fue principalmente una sociedad agraria.', 'visible': [['Este anexo muestra una cronología de los eventos más relevantes de la historia de las personas LGTB en la república de Islandia. La historia de las personas lesbianas, gais, bisexuales y transgénero (LGBT) en Islandia se diferencia de la de otros países escandinavos por la baja visibilidad que tuvieron hasta mediados del siglo xx. Esto se debió a que la población de Islandia era mucho menor a la de sus análogos nórdicos y que durante gran parte de su historia fue principalmente una sociedad agraria.;', 'Title: Barroco\\nDescription: El Barroco fue un período de la historia en la cultura occidental originado por una nueva forma de concebir el arte (el «estilo barroco») y que, partiendo desde diferentes contextos histórico-culturales, produjo obras en numerosos campos artísticos: literatura, arquitectura, escultura, pintura, música, ópera, danza, teatro, etc. Se manifestó principalmente en la Europa occidental, aunque debido al colonialismo también se dio en numerosas colonias de las potencias europeas, principalmente en Iberoamérica. Cronológicamente, abarcó todo el siglo xvii y principios del xviii, con mayor o menor prolongación en el tiempo dependiendo de cada país. Se suele situar entre el Manierismo y el Rococó, en una época caracterizada por fuertes disputas religiosas entre países católicos y protestantes, así como marcadas diferencias políticas entre los Estados absolutistas y los parlamentarios, donde una incipiente burguesía empezaba a poner los cimientos del capitalismo.']]}"
+
+    # Extract the last title and description using string splitting and rfind
+    last_title_idx = result.rfind('Title:')
+    last_desc_idx = result.rfind('Description:')
+
+    # Extract and clean up the last title and description
+    last_title = result[last_title_idx + 6:last_desc_idx].strip("\\n").strip()
+    last_desc = result[last_desc_idx + 12:].strip("\\n").strip()
+
+    # Remove any trailing or leading spaces, and fix the escaped newline characters
+    last_title = last_title.strip().replace('\\n', '\n')
+    last_desc = last_desc.strip().replace('\\n', '\n')
+
+    # Display the extracted last title and description
+    print("Last Title:", last_title)
+    print("Last Description:", last_desc)
+    return { "Title": last_title, "Description": last_desc}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=4000)
